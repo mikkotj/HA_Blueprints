@@ -1,0 +1,481 @@
+blueprint:
+  name: HA Device Trigger – IKEA E1524/E1810 (double & triple clicks)
+  description: >
+    Control anything with the IKEA TRÅDFRI five-button remote (E1524/E1810) using
+    Home Assistant MQTT device triggers (works with Zigbee2MQTT discovery).
+    MQTT triggers give some additional reaction time.
+    - Each button supports single/double/triple click (with an interval window)
+    - Immediate actions can fire instantly while the blueprint waits for more clicks
+    - Up/Down/Left/Right also support hold/release
+
+  Author: Mikko J
+  Version: 1.0.0
+  source_url: https://github.com/yourname/ha-blueprints/blob/main/Ikea_tradfri_5button_e1524_e1810_device_trigger_multi_click.yaml
+
+  domain: automation
+
+  input:
+    remote_device:
+      name: Remote (device)
+      description: Select the IKEA remote device discovered via MQTT (Zigbee2MQTT)
+      selector:
+        device:
+          integration: mqtt
+          # Optional narrowing; comment out if it hides your device:
+          # manufacturer: "IKEA of Sweden"
+          # model: "TRADFRI remote control"
+
+    interval:
+      name: Max interval between clicks (s)
+      description: Time window to decide if a click becomes double/triple
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 0.1
+          unit_of_measurement: seconds
+          mode: box
+
+    # Center (toggle)
+    button_center_x1:
+      name: Center – single click
+      default: []
+      selector: { action: {} }
+    button_center_x1_immediate:
+      name: Center – single click (immediate)
+      default: []
+      selector: { action: {} }
+    button_center_x2:
+      name: Center – double click
+      default: []
+      selector: { action: {} }
+    button_center_x2_immediate:
+      name: Center – double click (immediate)
+      default: []
+      selector: { action: {} }
+    button_center_x3:
+      name: Center – triple click
+      default: []
+      selector: { action: {} }
+
+    # Left
+    button_left_x1:
+      name: Left – single click
+      default: []
+      selector: { action: {} }
+    button_left_x1_immediate:
+      name: Left – single click (immediate)
+      default: []
+      selector: { action: {} }
+    button_left_x2:
+      name: Left – double click
+      default: []
+      selector: { action: {} }
+    button_left_x2_immediate:
+      name: Left – double click (immediate)
+      default: []
+      selector: { action: {} }
+    button_left_x3:
+      name: Left – triple click
+      default: []
+      selector: { action: {} }
+    button_left_hold:
+      name: Left – hold
+      default: []
+      selector: { action: {} }
+    button_left_release:
+      name: Left – release
+      default: []
+      selector: { action: {} }
+
+    # Right
+    button_right_x1:
+      name: Right – single click
+      default: []
+      selector: { action: {} }
+    button_right_x1_immediate:
+      name: Right – single click (immediate)
+      default: []
+      selector: { action: {} }
+    button_right_x2:
+      name: Right – double click
+      default: []
+      selector: { action: {} }
+    button_right_x2_immediate:
+      name: Right – double click (immediate)
+      default: []
+      selector: { action: {} }
+    button_right_x3:
+      name: Right – triple click
+      default: []
+      selector: { action: {} }
+    button_right_hold:
+      name: Right – hold
+      default: []
+      selector: { action: {} }
+    button_right_release:
+      name: Right – release
+      default: []
+      selector: { action: {} }
+
+    # Up
+    button_up_x1:
+      name: Up – single click
+      default: []
+      selector: { action: {} }
+    button_up_x1_immediate:
+      name: Up – single click (immediate)
+      default: []
+      selector: { action: {} }
+    button_up_x2:
+      name: Up – double click
+      default: []
+      selector: { action: {} }
+    button_up_x2_immediate:
+      name: Up – double click (immediate)
+      default: []
+      selector: { action: {} }
+    button_up_x3:
+      name: Up – triple click
+      default: []
+      selector: { action: {} }
+    button_up_hold:
+      name: Up – hold
+      default: []
+      selector: { action: {} }
+    button_up_release:
+      name: Up – release
+      default: []
+      selector: { action: {} }
+
+    # Down
+    button_down_x1:
+      name: Down – single click
+      default: []
+      selector: { action: {} }
+    button_down_x1_immediate:
+      name: Down – single click (immediate)
+      default: []
+      selector: { action: {} }
+    button_down_x2:
+      name: Down – double click
+      default: []
+      selector: { action: {} }
+    button_down_x2_immediate:
+      name: Down – double click (immediate)
+      default: []
+      selector: { action: {} }
+    button_down_x3:
+      name: Down – triple click
+      default: []
+      selector: { action: {} }
+    button_down_hold:
+      name: Down – hold
+      default: []
+      selector: { action: {} }
+    button_down_release:
+      name: Down – release
+      default: []
+      selector: { action: {} }
+
+mode: single
+max_exceeded: silent
+
+# Timestamp helper for double/triple logic
+variables:
+  interval: !input interval
+  time: "{{ as_timestamp(now()) }}"
+
+# --- DEVICE TRIGGERS (match exactly what your manual automation used) ---
+trigger:
+  # Center
+  - id: toggle
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: toggle
+
+  # Up
+  - id: brightness_up_click
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: brightness_up_click
+  - id: brightness_up_hold
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: brightness_up_hold
+  - id: brightness_up_release
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: brightness_up_release
+
+  # Down
+  - id: brightness_down_click
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: brightness_down_click
+  - id: brightness_down_hold
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: brightness_down_hold
+  - id: brightness_down_release
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: brightness_down_release
+
+  # Left
+  - id: arrow_left_click
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: arrow_left_click
+  - id: arrow_left_hold
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: arrow_left_hold
+  - id: arrow_left_release
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: arrow_left_release
+
+  # Right
+  - id: arrow_right_click
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: arrow_right_click
+  - id: arrow_right_hold
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: arrow_right_hold
+  - id: arrow_right_release
+    platform: device
+    domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: arrow_right_release
+
+action:
+  - choose:
+      # ---------------- CENTER (toggle) ----------------
+      - conditions: "{{ trigger.id == 'toggle' }}"
+        sequence:
+          - choose: []
+            default: !input button_center_x1_immediate
+
+          - wait_for_trigger:
+              - platform: device
+                domain: mqtt
+                device_id: !input remote_device
+                type: action
+                subtype: toggle
+            timeout: "{{ interval }}"
+            continue_on_timeout: true
+
+          - if:
+              - condition: template
+                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+            then: !input button_center_x1
+            else:
+              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - choose: []
+                default: !input button_center_x2_immediate
+              - wait_for_trigger:
+                  - platform: device
+                    domain: mqtt
+                    device_id: !input remote_device
+                    type: action
+                    subtype: toggle
+                timeout: "{{ interval }}"
+                continue_on_timeout: true
+              - if:
+                  - condition: template
+                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                then: !input button_center_x2
+                else: !input button_center_x3
+
+      # ---------------- UP ----------------
+      - conditions: "{{ trigger.id == 'brightness_up_click' }}"
+        sequence:
+          - choose: []
+            default: !input button_up_x1_immediate
+          - wait_for_trigger:
+              - platform: device
+                domain: mqtt
+                device_id: !input remote_device
+                type: action
+                subtype: brightness_up_click
+            timeout: "{{ interval }}"
+            continue_on_timeout: true
+          - if:
+              - condition: template
+                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+            then: !input button_up_x1
+            else:
+              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - choose: []
+                default: !input button_up_x2_immediate
+              - wait_for_trigger:
+                  - platform: device
+                    domain: mqtt
+                    device_id: !input remote_device
+                    type: action
+                    subtype: brightness_up_click
+                timeout: "{{ interval }}"
+                continue_on_timeout: true
+              - if:
+                  - condition: template
+                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                then: !input button_up_x2
+                else: !input button_up_x3
+
+      - conditions: "{{ trigger.id == 'brightness_up_hold' }}"
+        sequence: !input button_up_hold
+
+      - conditions: "{{ trigger.id == 'brightness_up_release' }}"
+        sequence: !input button_up_release
+
+      # ---------------- DOWN ----------------
+      - conditions: "{{ trigger.id == 'brightness_down_click' }}"
+        sequence:
+          - choose: []
+            default: !input button_down_x1_immediate
+          - wait_for_trigger:
+              - platform: device
+                domain: mqtt
+                device_id: !input remote_device
+                type: action
+                subtype: brightness_down_click
+            timeout: "{{ interval }}"
+            continue_on_timeout: true
+          - if:
+              - condition: template
+                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+            then: !input button_down_x1
+            else:
+              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - choose: []
+                default: !input button_down_x2_immediate
+              - wait_for_trigger:
+                  - platform: device
+                    domain: mqtt
+                    device_id: !input remote_device
+                    type: action
+                    subtype: brightness_down_click
+                timeout: "{{ interval }}"
+                continue_on_timeout: true
+              - if:
+                  - condition: template
+                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                then: !input button_down_x2
+                else: !input button_down_x3
+
+      - conditions: "{{ trigger.id == 'brightness_down_hold' }}"
+        sequence: !input button_down_hold
+
+      - conditions: "{{ trigger.id == 'brightness_down_release' }}"
+        sequence: !input button_down_release
+
+      # ---------------- LEFT ----------------
+      - conditions: "{{ trigger.id == 'arrow_left_click' }}"
+        sequence:
+          - choose: []
+            default: !input button_left_x1_immediate
+          - wait_for_trigger:
+              - platform: device
+                domain: mqtt
+                device_id: !input remote_device
+                type: action
+                subtype: arrow_left_click
+            timeout: "{{ interval }}"
+            continue_on_timeout: true
+          - if:
+              - condition: template
+                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+            then: !input button_left_x1
+            else:
+              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - choose: []
+                default: !input button_left_x2_immediate
+              - wait_for_trigger:
+                  - platform: device
+                    domain: mqtt
+                    device_id: !input remote_device
+                    type: action
+                    subtype: arrow_left_click
+                timeout: "{{ interval }}"
+                continue_on_timeout: true
+              - if:
+                  - condition: template
+                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                then: !input button_left_x2
+                else: !input button_left_x3
+
+      - conditions: "{{ trigger.id == 'arrow_left_hold' }}"
+        sequence: !input button_left_hold
+
+      - conditions: "{{ trigger.id == 'arrow_left_release' }}"
+        sequence: !input button_left_release
+
+      # ---------------- RIGHT ----------------
+      - conditions: "{{ trigger.id == 'arrow_right_click' }}"
+        sequence:
+          - choose: []
+            default: !input button_right_x1_immediate
+          - wait_for_trigger:
+              - platform: device
+                domain: mqtt
+                device_id: !input remote_device
+                type: action
+                subtype: arrow_right_click
+            timeout: "{{ interval }}"
+            continue_on_timeout: true
+          - if:
+              - condition: template
+                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+            then: !input button_right_x1
+            else:
+              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - choose: []
+                default: !input button_right_x2_immediate
+              - wait_for_trigger:
+                  - platform: device
+                    domain: mqtt
+                    device_id: !input remote_device
+                    type: action
+                    subtype: arrow_right_click
+                timeout: "{{ interval }}"
+                continue_on_timeout: true
+              - if:
+                  - condition: template
+                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                then: !input button_right_x2
+                else: !input button_right_x3
+
+      - conditions: "{{ trigger.id == 'arrow_right_hold' }}"
+        sequence: !input button_right_hold
+
+      - conditions: "{{ trigger.id == 'arrow_right_release' }}"
+        sequence: !input button_right_release
