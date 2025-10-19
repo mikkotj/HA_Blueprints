@@ -1,0 +1,81 @@
+# create an automation using blueprint provided and then go to yaml mode
+# and paste this. 
+# this controls a light group light.valot_rappu
+# should do the same basic functions as when paired to Ikeas gw and app
+# actually - long press left and right are not there - but you got the idea
+
+
+alias: Button 1 Ikea functions
+description: ""
+use_blueprint:
+  path: mikkotj/Ikea_tradfri_5button_e1524_e1810_device_trigger_multi_click.yaml
+  input:
+    remote_device: f39dd993f83fc5c4b5ffa83dc9720c65
+    button_center_x1:
+      - action: light.toggle
+        metadata: {}
+        data: {}
+        target:
+          entity_id: light.valot_rappu
+    button_up_x1:
+      - target:
+          entity_id: light.valot_rappu
+        data:
+          brightness_step_pct: 10
+        action: light.turn_on
+    button_down_x1:
+      - target:
+          entity_id: light.valot_rappu
+        data:
+          brightness_step_pct: -10
+        action: light.turn_on
+    button_left_x1:
+      - target:
+          entity_id: light.valot_rappu
+        data:
+          color_temp: >
+            {% set cur = state_attr('light.valot_rappu','color_temp')|int(0) %}
+            {% set min = state_attr('light.valot_rappu','min_mireds')|int(153)
+            %} {% set max =
+            state_attr('light.valot_rappu','max_mireds')|int(500) %} {{ [cur +
+            25, max]|min }}
+        action: light.turn_on
+    button_right_x1:
+      - target:
+          entity_id: light.valot_rappu
+        data:
+          color_temp: >
+            {% set cur = state_attr('light.valot_rappu','color_temp')|int(0) %}
+            {% set min = state_attr('light.valot_rappu','min_mireds')|int(153)
+            %} {% set max =
+            state_attr('light.valot_rappu','max_mireds')|int(500) %} {{ [cur -
+            25, min]|max }}
+        action: light.turn_on
+    button_up_hold:
+      - repeat:
+          sequence:
+            - target:
+                entity_id: light.valot_rappu
+              data:
+                brightness_step_pct: 5
+              action: light.turn_on
+            - delay: "00:00:00.2"
+          until:
+            - condition: template
+              value_template: >-
+                {{ states('sensor.painike_1_ikea_action') ==
+                'brightness_up_release' }}
+    button_down_hold:
+      - repeat:
+          sequence:
+            - target:
+                entity_id: light.valot_rappu
+              data:
+                brightness_step_pct: -5
+              action: light.turn_on
+            - delay: "00:00:00.2"
+          until:
+            - condition: template
+              value_template: >-
+                {{ states('sensor.painike_1_ikea_action') ==
+                'brightness_down_release' }}
