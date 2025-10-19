@@ -1,5 +1,5 @@
 blueprint:
-  name: HA Device Trigger – IKEA E1524/E1810 (double & triple clicks)
+  name: IKEA TRÅDFRI 5-Button Remote (E1524/E1810) – Double & Triple Clicks - (Zigbee2MQTT)
   description: >
     Control anything with the IKEA TRÅDFRI five-button remote (E1524/E1810) using
     Home Assistant MQTT device triggers (works with Zigbee2MQTT discovery).
@@ -8,12 +8,10 @@ blueprint:
     - Immediate actions can fire instantly while the blueprint waits for more clicks
     - Up/Down/Left/Right also support hold/release
 
-  Author: Mikko J
-  Version: 1.0.0
-  source_url: https://github.com/yourname/ha-blueprints/blob/main/Ikea_tradfri_5button_e1524_e1810_device_trigger_multi_click.yaml
-
+    Author: Mikko J
+    Version: 1.0.1
   domain: automation
-
+  source_url: https://github.com/mikkotj/HA_Blueprints/blob/main/blueprints/automation/mikkotj/Ikea_tradfri_5button_e1524_e1810_device_trigger_multi_click.yaml
   input:
     remote_device:
       name: Remote (device)
@@ -31,7 +29,7 @@ blueprint:
       default: 0.5
       selector:
         number:
-          min: 0
+          min: 0.1
           max: 10
           step: 0.1
           unit_of_measurement: seconds
@@ -185,9 +183,9 @@ max_exceeded: silent
 # Timestamp helper for double/triple logic
 variables:
   interval: !input interval
-  time: "{{ as_timestamp(now()) }}"
+  click_start_ts: "{{ as_timestamp(now()) }}"
 
-# --- DEVICE TRIGGERS (match exactly what your manual automation used) ---
+# --- DEVICE TRIGGERS ---
 trigger:
   # Center
   - id: toggle
@@ -280,7 +278,9 @@ trigger:
 action:
   - choose:
       # ---------------- CENTER (toggle) ----------------
-      - conditions: "{{ trigger.id == 'toggle' }}"
+      - conditions:
+          - condition: trigger
+            id: toggle
         sequence:
           - choose: []
             default: !input button_center_x1_immediate
@@ -291,15 +291,17 @@ action:
                 device_id: !input remote_device
                 type: action
                 subtype: toggle
-            timeout: "{{ interval }}"
+            timeout: 
+              milliseconds: "{{ (interval * 1000) | int }}"
             continue_on_timeout: true
 
           - if:
               - condition: template
-                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
             then: !input button_center_x1
             else:
-              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - variables:
+                  click_start_ts: "{{ as_timestamp(now()) }}"
               - choose: []
                 default: !input button_center_x2_immediate
               - wait_for_trigger:
@@ -308,16 +310,19 @@ action:
                     device_id: !input remote_device
                     type: action
                     subtype: toggle
-                timeout: "{{ interval }}"
+                timeout: 
+                  milliseconds: "{{ (interval * 1000) | int }}"
                 continue_on_timeout: true
               - if:
                   - condition: template
-                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                    value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
                 then: !input button_center_x2
                 else: !input button_center_x3
 
       # ---------------- UP ----------------
-      - conditions: "{{ trigger.id == 'brightness_up_click' }}"
+      - conditions:
+          - condition: trigger
+            id: brightness_up_click
         sequence:
           - choose: []
             default: !input button_up_x1_immediate
@@ -327,14 +332,15 @@ action:
                 device_id: !input remote_device
                 type: action
                 subtype: brightness_up_click
-            timeout: "{{ interval }}"
-            continue_on_timeout: true
+            timeout: 
+              milliseconds: "{{ (interval * 1000) | int }}"
           - if:
               - condition: template
-                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
             then: !input button_up_x1
             else:
-              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - variables:
+                  click_start_ts: "{{ as_timestamp(now()) }}"
               - choose: []
                 default: !input button_up_x2_immediate
               - wait_for_trigger:
@@ -343,22 +349,29 @@ action:
                     device_id: !input remote_device
                     type: action
                     subtype: brightness_up_click
-                timeout: "{{ interval }}"
+                timeout: 
+                  milliseconds: "{{ (interval * 1000) | int }}"
                 continue_on_timeout: true
               - if:
                   - condition: template
-                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                    value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
                 then: !input button_up_x2
                 else: !input button_up_x3
 
-      - conditions: "{{ trigger.id == 'brightness_up_hold' }}"
+      - conditions:
+          - condition: trigger
+            id: brightness_up_hold
         sequence: !input button_up_hold
 
-      - conditions: "{{ trigger.id == 'brightness_up_release' }}"
+      - conditions:
+          - condition: trigger
+            id: brightness_up_release
         sequence: !input button_up_release
 
       # ---------------- DOWN ----------------
-      - conditions: "{{ trigger.id == 'brightness_down_click' }}"
+      - conditions:
+          - condition: trigger
+            id: brightness_down_click
         sequence:
           - choose: []
             default: !input button_down_x1_immediate
@@ -368,14 +381,16 @@ action:
                 device_id: !input remote_device
                 type: action
                 subtype: brightness_down_click
-            timeout: "{{ interval }}"
+            timeout: 
+              milliseconds: "{{ (interval * 1000) | int }}"
             continue_on_timeout: true
           - if:
               - condition: template
-                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
             then: !input button_down_x1
             else:
-              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - variables:
+                  click_start_ts: "{{ as_timestamp(now()) }}"
               - choose: []
                 default: !input button_down_x2_immediate
               - wait_for_trigger:
@@ -384,22 +399,29 @@ action:
                     device_id: !input remote_device
                     type: action
                     subtype: brightness_down_click
-                timeout: "{{ interval }}"
+                timeout: 
+                  milliseconds: "{{ (interval * 1000) | int }}"
                 continue_on_timeout: true
               - if:
                   - condition: template
-                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                    value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
                 then: !input button_down_x2
                 else: !input button_down_x3
 
-      - conditions: "{{ trigger.id == 'brightness_down_hold' }}"
+      - conditions:
+          - condition: trigger
+            id: brightness_down_hold
         sequence: !input button_down_hold
 
-      - conditions: "{{ trigger.id == 'brightness_down_release' }}"
+      - conditions:
+          - condition: trigger
+            id: brightness_down_release
         sequence: !input button_down_release
 
       # ---------------- LEFT ----------------
-      - conditions: "{{ trigger.id == 'arrow_left_click' }}"
+      - conditions:
+          - condition: trigger
+            id: arrow_left_click
         sequence:
           - choose: []
             default: !input button_left_x1_immediate
@@ -409,14 +431,16 @@ action:
                 device_id: !input remote_device
                 type: action
                 subtype: arrow_left_click
-            timeout: "{{ interval }}"
+            timeout: 
+              milliseconds: "{{ (interval * 1000) | int }}"
             continue_on_timeout: true
           - if:
               - condition: template
-                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
             then: !input button_left_x1
             else:
-              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - variables:
+                  click_start_ts: "{{ as_timestamp(now()) }}"
               - choose: []
                 default: !input button_left_x2_immediate
               - wait_for_trigger:
@@ -425,22 +449,29 @@ action:
                     device_id: !input remote_device
                     type: action
                     subtype: arrow_left_click
-                timeout: "{{ interval }}"
+                timeout: 
+                  milliseconds: "{{ (interval * 1000) | int }}"
                 continue_on_timeout: true
               - if:
                   - condition: template
-                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                    value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
                 then: !input button_left_x2
                 else: !input button_left_x3
 
-      - conditions: "{{ trigger.id == 'arrow_left_hold' }}"
+      - conditions:
+          - condition: trigger
+            id: arrow_left_hold
         sequence: !input button_left_hold
 
-      - conditions: "{{ trigger.id == 'arrow_left_release' }}"
+      - conditions:
+          - condition: trigger
+            id: arrow_left_release
         sequence: !input button_left_release
 
       # ---------------- RIGHT ----------------
-      - conditions: "{{ trigger.id == 'arrow_right_click' }}"
+      - conditions:
+          - condition: trigger
+            id: arrow_right_click
         sequence:
           - choose: []
             default: !input button_right_x1_immediate
@@ -450,14 +481,16 @@ action:
                 device_id: !input remote_device
                 type: action
                 subtype: arrow_right_click
-            timeout: "{{ interval }}"
+            timeout: 
+              milliseconds: "{{ (interval * 1000) | int }}"
             continue_on_timeout: true
           - if:
               - condition: template
-                value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
             then: !input button_right_x1
             else:
-              - variables: { time: "{{ as_timestamp(now()) }}" }
+              - variables:
+                  click_start_ts: "{{ as_timestamp(now()) }}"
               - choose: []
                 default: !input button_right_x2_immediate
               - wait_for_trigger:
@@ -466,16 +499,21 @@ action:
                     device_id: !input remote_device
                     type: action
                     subtype: arrow_right_click
-                timeout: "{{ interval }}"
+                timeout: 
+                  milliseconds: "{{ (interval * 1000) | int }}"
                 continue_on_timeout: true
               - if:
                   - condition: template
-                    value_template: "{{ (as_timestamp(now()) - time) >= interval }}"
+                    value_template: "{{ (as_timestamp(now()) - click_start_ts) >= interval }}"
                 then: !input button_right_x2
                 else: !input button_right_x3
 
-      - conditions: "{{ trigger.id == 'arrow_right_hold' }}"
+      - conditions:
+          - condition: trigger
+            id: arrow_right_hold
         sequence: !input button_right_hold
 
-      - conditions: "{{ trigger.id == 'arrow_right_release' }}"
+      - conditions:
+          - condition: trigger
+            id: arrow_right_release
         sequence: !input button_right_release
